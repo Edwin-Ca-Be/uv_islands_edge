@@ -1,0 +1,34 @@
+schema_version = "1.0.0"
+
+# --- Identidad del addon / Add-on identity ---------------------------------
+id = "uv_islands_edge"
+version = "1.0.0"
+name = "UV Islands Edge"
+tagline = "Contornos de islas UV con mapa de calor, UDIM y empaquetado inteligente"
+maintainer = "Edwin Ca Be <Edwin_ca_be@outlook.com>"
+
+# Tipos soportados: "add-on", "theme"
+type = "add-on"
+
+# --- Enlaces opcionales ------------------------------------------------------
+# website = "https://github.com/Edwin-Ca-Be/uv_islands_edge"
+
+# --- Etiquetas (categorías reconocidas por Blender) -------------------------
+tags = ["UV", "Mesh"]
+
+# --- Compatibilidad de versión -----------------------------------------------
+blender_version_min = "5.0.0"
+
+# --- Licencia (formato SPDX, prefijo "SPDX:") --------------------------------
+license = [
+  "SPDX:GPL-3.0-or-later",
+]
+copyright = [
+  "2026 Edwin Ca Be",
+]
+
+# --- Permisos -----------------------------------------------------------------
+# El addon únicamente escribe en disco cuando el usuario exporta el reporte
+# de tiles UDIM mediante el selector de archivos (ExportHelper).
+[permissions]
+files = "Exportar el reporte de tiles UDIM a un archivo de texto elegido por el usuario"
