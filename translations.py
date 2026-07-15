@@ -135,5 +135,8 @@ translations_dict = {
         ("*", "No UV islands found to pack."): "No se encontraron islas UV para empaquetar.",
         ("*", "Smart Pack executed successfully. Final margin: %.5f (%d pass(es))."): "Empaquetado inteligente ejecutado con éxito. Margen final: %.5f (%d pasada(s)).",
         ("*", "Smart Pack finished after %d pass(es) but %d island(s) are still closer than the Proximity Threshold. Try enabling Allow Island Scaling or lowering the Proximity Threshold."): "El empaquetado finalizó tras %d pasada(s) pero %d isla(s) siguen más cerca que el Umbral de Proximidad. Prueba activar el Escalado de Islas o reducir el Umbral de Proximidad.",
+
+        # --- Add-on Preferences ---
+        ("*", "Web / GitHub"): "Web / GitHub",
     }
 }

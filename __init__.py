@@ -6,6 +6,8 @@ Autor: Edwin Ca Be
 """
 
 import bpy
+import bpy.utils.previews
+import os
 import bmesh
 import gpu
 import blf
@@ -23,6 +25,42 @@ from .translations import translations_dict
 
 def _(text):
     return bpy.app.translations.pgettext_iface(text)
+
+# Repositorio / documentación del addon (usado por el botón "Web" en Preferencias)
+ADDON_REPO_URL = "https://github.com/Edwin-Ca-Be/uv_islands_edge"
+
+# ---------------------------------------------------------------------------
+# Custom icon / Icono personalizado del addon
+# ---------------------------------------------------------------------------
+_icon_collections = {}
+
+def get_custom_icon_id():
+    """Devuelve el icon_id del icono personalizado, o None si no se pudo cargar
+    (en cuyo caso la UI debe recurrir a un icono estándar de Blender)."""
+    pcoll = _icon_collections.get("main")
+    if pcoll is None:
+        return None
+    icon = pcoll.get("uv_islands_edge")
+    return icon.icon_id if icon else None
+
+def _register_icons():
+    try:
+        pcoll = bpy.utils.previews.new()
+        icons_dir = os.path.join(os.path.dirname(__file__), "icons")
+        pcoll.load("uv_islands_edge", os.path.join(icons_dir, "uv_islands_edge.png"), 'IMAGE')
+        _icon_collections["main"] = pcoll
+    except Exception:
+        # Si el icono no puede cargarse (archivo faltante, entorno headless, etc.)
+        # el addon sigue funcionando normalmente usando iconos estándar de Blender.
+        traceback.print_exc()
+
+def _unregister_icons():
+    for pcoll in _icon_collections.values():
+        try:
+            bpy.utils.previews.remove(pcoll)
+        except Exception:
+            pass
+    _icon_collections.clear()
 
 # ---------------------------------------------------------------------------
 # Global cache and handler / Caché global y controlador
@@ -1544,6 +1582,13 @@ class UV_PT_island_outline_panel(bpy.types.Panel):
     bl_region_type = 'UI'
     bl_category = "UV Islands Edge"
 
+    def draw_header(self, context):
+        icon_id = get_custom_icon_id()
+        if icon_id:
+            self.layout.label(text="", icon_value=icon_id)
+        else:
+            self.layout.label(text="", icon='UV')
+
     def draw(self, context):
         layout = self.layout
         props = context.scene.uv_island_outline
@@ -1733,6 +1778,40 @@ class UV_PT_udim_panel(bpy.types.Panel):
         layout.operator("uv.island_udim_export_report", text="Export Report", icon='EXPORT')
 
 # ---------------------------------------------------------------------------
+# Add-on Preferences / Preferencias del addon
+# ---------------------------------------------------------------------------
+class UV_AP_island_outline_preferences(bpy.types.AddonPreferences):
+    bl_idname = __package__ if __package__ else __name__
+
+    def draw(self, context):
+        layout = self.layout
+        col = layout.column(align=True)
+        icon_id = get_custom_icon_id()
+
+        # Icono grande y centrado, arriba de todo lo demás
+        icon_row = col.row()
+        icon_row.alignment = 'CENTER'
+        if icon_id:
+            icon_row.template_icon(icon_value=icon_id, scale=5.0)
+        else:
+            icon_row.label(text="", icon='UV')
+
+        title_row = col.row()
+        title_row.alignment = 'CENTER'
+        title_row.label(text="UV Islands Edge")
+
+        subtitle_row = col.row()
+        subtitle_row.alignment = 'CENTER'
+        subtitle_row.label(text=_("Contour of UV Islands"))
+
+        col.separator()
+
+        # Botón del enlace web, debajo del icono
+        row = col.row()
+        row.scale_y = 1.2
+        row.operator("wm.url_open", text=_("Web / GitHub"), icon='URL').url = ADDON_REPO_URL
+
+# ---------------------------------------------------------------------------
 # Registration Pipeline / Proceso de registro
 # ---------------------------------------------------------------------------
 _classes = (
@@ -1740,7 +1819,8 @@ _classes = (
     UV_OT_island_select_by_flag, UV_OT_island_fix_mirrored_faces, UV_OT_island_smart_pack,
     UV_OT_island_udim_show_all, UV_OT_island_udim_reset_colors, UV_OT_island_udim_export_report, UV_UL_udim_tiles,
     UV_PT_island_outline_panel, UV_PT_heatmap_panel, UV_PT_face_orientation_panel, 
-    UV_PT_udim_panel, UV_PT_island_actions_panel, UV_PT_smart_pack_panel
+    UV_PT_udim_panel, UV_PT_island_actions_panel, UV_PT_smart_pack_panel,
+    UV_AP_island_outline_preferences
 )
 
 def register():
@@ -1750,6 +1830,7 @@ def register():
         pass
         
     bpy.app.translations.register(__name__, translations_dict)
+    _register_icons()
     for cls in _classes: bpy.utils.register_class(cls)
     bpy.types.Scene.uv_island_outline = bpy.props.PointerProperty(type=UVIslandOutlineProperties)
 
@@ -1776,6 +1857,7 @@ def unregister():
         
     _island_cache.clear()
     _udim_tile_stats.clear()
+    _unregister_icons()
 
 if __name__ == "__main__":
     register()

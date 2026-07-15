@@ -1,0 +1,150 @@
+UV IslandAquí tienes la versión extendida y definitiva del manual/README. He incorporado cada función, panel y lógica interna (basada en el código fuente del addon) para que sea un documento técnico y completo, ideal para un repositorio de GitHub o una documentación oficial.
+
+UV Islands Edge v1.0.0
+Documentación Oficial y Manual de Usuario
+
+UV Islands Edge es un addon de alto rendimiento para Blender 5.x empaquetado como Extensión. Actúa como un inspector espacial y visual de UVs en tiempo real: detecta contornos, muestra colisiones, analiza topología invertida (mirrored) y genera reportes UDIM para ayudarte a mantener tus mapeos UV limpios, óptimos y sin errores antes del proceso de texturizado o baking.
+
+🚀 Instalación y Requisitos
+Compatibilidad: Blender 5.x (Utiliza el nuevo sistema de extensiones basado en blender_manifest.toml).
+
+Descarga: Obtén el archivo .zip desde el repositorio: GitHub - Edwin-Ca-Be/uv_islands_edge
+
+Pasos:
+
+En Blender, ve a Edit → Preferences → Add-ons.
+
+Haz clic en el botón desplegable y selecciona Install From Disk.
+
+Selecciona el archivo .zip descargado y asegúrate de que esté habilitado en la lista.
+
+En el espacio de trabajo UV Editing, abre el panel lateral (tecla N) y busca la pestaña UV Islands Edge.
+
+(Nota: Asegúrate de estar en Edit Mode con un objeto de malla (Mesh) seleccionado para que el addon detecte los datos UV).
+
+🛠️ Desglose de Herramientas y Paneles
+El addon se divide en varios subpaneles modulares dentro de la interfaz del Editor UV para mantener el flujo de trabajo organizado.
+
+1. Panel Principal: Contour of UV Islands
+El núcleo del addon. Controla la visualización primaria y los umbrales de detección.
+
+Enable: Interruptor global. Dibuja contornos desplazados alrededor de cada isla UV.
+
+Colores de Estado:
+
+Contour: Color seguro para islas bien separadas (Azul por defecto).
+
+Near Color: Color de advertencia cuando la distancia entre islas es menor al umbral de proximidad.
+
+Overlap Color: Color crítico cuando dos islas están físicamente superpuestas.
+
+Thickness & Distance: Define el grosor de la línea y el offset (desplazamiento matemático) del contorno respecto a la geometría real.
+
+Proximity Threshold: La distancia mínima de seguridad exigida entre islas.
+
+Opciones de Optimización:
+
+Only Selected: Ahorra recursos calculando contornos solo para los objetos activos en Edit Mode.
+
+Min Island Segments: Ignora "basura UV" o islas demasiado pequeñas definiendo un mínimo de segmentos.
+
+Auto Detect: Escucha los eventos de transformación (mover, escalar, rotar) y actualiza los contornos automáticamente al soltar el clic. (Nota técnica: Utiliza un sistema de "debounce" de 0.35s para no penalizar el rendimiento durante transformaciones fluidas).
+
+2. Panel: Heatmap Options (Mapa de Calor)
+Permite analizar distancias complejas mediante gradientes visuales en lugar de colores sólidos.
+
+Enable Heatmap: Reemplaza el color "Near" por un gradiente de proximidad.
+
+Very Near Color / Far Color: Define el inicio y fin del gradiente (ej. de Rojo a Verde).
+
+Max Heatmap Distance: Establece el radio máximo de búsqueda espacial. Todo lo que esté más allá de esta distancia usará el color "Far" de forma segura.
+
+3. Panel: Face Orientation
+Un inspector analítico para detectar problemas de alineación y winding (orden de vértices) en caras individuales.
+
+Muestra flechas direccionales sobre cada cara de la isla con etiquetas identificativas:
+
+H (Horizontal) & V (Vertical): Indica el eje predominante de la cara.
+
+R (Rotated): La cara está rotada en un ángulo mayor a la Rotation Tolerance en comparación con el promedio general de la isla.
+
+M (Mirrored): La topología UV está invertida respecto a la normal 3D (área negativa). Causa errores graves al calcular mapas de normales.
+
+Arrow Size: Ajusta el tamaño visual de los indicadores.
+
+4. Panel: Actions (Selección y Corrección)
+Herramientas inteligentes para evitar la búsqueda manual de errores.
+
+Smart Selection: Al hacer clic, el addon cambia automáticamente el modo a Selección de Caras y aísla todas las caras con flags específicos: Select Mirrored, Select Rotated, o Select Overlapping.
+
+Quick Fix - Fix Mirrored Faces: Selecciona, invierte (flip normals) las caras espejadas de todos los objetos activos y recalcula los contornos, todo con un solo clic.
+
+5. Panel: Smart Packing Integration
+Una macro iterativa que mejora el operador de empaquetado nativo de Blender, obligando a las islas a respetar tus umbrales y bordes UDIM.
+
+Margin Source: Decide de dónde sacar el margen de empaquetado (del contorno, de tu umbral de proximidad o un margen manual personalizado).
+
+Fix Mirrored Before Pack: Sanea las islas invertidas automáticamente antes de reordenarlas.
+
+Smart Pack (Lógica Interna): Agrupa las islas por su UDIM actual para que nunca crucen baldosas. Ejecuta el empaquetador iterativamente (hasta 8 pases), incrementando el margen un 35% en cada intento si detecta que las islas aún chocan con el Proximity Threshold, garantizando un resultado limpio.
+
+6. Panel: UDIM Tiles
+Gestor avanzado para texturizado en múltiples baldosas.
+
+Tile Color Mode: Usa una paleta automática (basada en la Proporción Áurea para garantizar que mosaicos adyacentes tengan colores contrastantes) o permite colores Custom por cada UDIM.
+
+Show UDIM Grid: Dibuja los límites exactos de cada baldosa (1001, 1002...) y su ID en la esquina inferior izquierda.
+
+Tile List (Estadísticas en vivo): Una lista interactiva que te muestra en tiempo real cuántas islas, solapamientos y problemas de simetría (Mirrored) hay dentro de cada baldosa UDIM.
+
+Show All Tiles: Permite filtrar la vista del editor UV para ver solo el UDIM que selecciones en la lista o verlos todos simultáneamente.
+
+📝 Generación de Reportes UDIM
+El botón Export Report es vital antes de mandar modelos a producción o baking. Genera un archivo .txt que desglosa el estado exacto de tus coordenadas.
+
+¿Qué detecta el reporte?
+
+Islas cruzando los límites físicos entre dos UDIMs (Spanning tile boundary).
+
+Islas fuera del espacio positivo estándar de UDIMs (Outside UDIM range).
+
+Superposiciones exactas (ej. "Mesh_A island #2: overlapping with Mesh_B island #1").
+
+Caras invertidas por isla.
+
+(Nota de Rendimiento: Si tienes más de 90 islas seleccionadas, el cálculo cruzado de colisiones para el reporte de texto se omitirá para evitar que Blender se congele, pero los contornos visuales en tiempo real seguirán funcionando gracias a su sistema interno acelerado por cuadrículas).
+
+Ejemplo de Reporte Generado:
+
+Plaintext
+UDIM Tile Report
+Generated: 2026-07-14 20:30:00
+============================================================
+Tile 1001
+------------------------------
+  Islands: 5
+  Overlapping: 1
+  Mirrored: 2
+  Spanning tile boundary: 0
+  Outside UDIM range: 0
+  Issues:
+    - Object 'Mesh_A' island #2: overlapping with Mesh_B island #1 (tile 1001)
+    - Object 'Mesh_A' island #4: contains mirrored (flipped) faces
+============================================================
+Summary: 1 tile(s), 5 island(s) total.
+Overlapping: 1 | Mirrored: 2 | Spanning: 0 | Out of range: 0
+💡 Flujo de Trabajo Recomendado (Best Practices)
+Inicia entrando a Edit Mode en tus mallas e ingresa al espacio UV Editing.
+
+Activa Enable en el panel Contour. Mantén Auto Detect apagado si usarás una tableta gráfica o harás desempaquetados masivos muy pesados; enciéndelo para acomodar islas de forma manual.
+
+Utiliza la lista UDIM Tiles para identificar visualmente en qué áreas estás trabajando.
+
+Activa Face Orientation. Ve al subpanel Actions y usa Fix Mirrored Faces para sanear la topología de un plumazo.
+
+Usa el Smart Pack Islands para consolidar todo respetando la distancia de seguridad.
+
+Exporta el UDIM Report y lee si quedó algún error residual cruzando de un tile a otro.
+
+¡Tus UVs están perfectas y listas para texturizar!
+
